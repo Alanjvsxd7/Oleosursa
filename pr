@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Interactivo - OLEOSURSA</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Estilos generales del body */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #00b0ff, #0078d4);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        /* Formulario de inicio de sesión */
+        #loginForm, #registerForm {
+            background-color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 350px;
+            text-align: center;
+        }
+
+        /* Título del formulario */
+        #loginForm h2, #registerForm h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #0078d4;
+            font-weight: bold;
+        }
+
+        /* Campos de texto */
+        #loginForm input, #registerForm input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        #loginForm input:focus, #registerForm input:focus {
+            border-color: #0078d4;
+            outline: none;
+        }
+
+        /* Botón de inicio de sesión y registro */
+        #loginForm button, #registerForm button {
+            background-color: #0078d4;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            width: 100%;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #loginForm button:hover, #registerForm button:hover {
+            background-color: #005fa3;
+        }
+
+        /* Estilo para enlaces */
+        #loginForm a, #registerForm a {
+            color: #0078d4;
+            text-decoration: none;
+        }
+
+        #loginForm a:hover, #registerForm a:hover {
+            text-decoration: underline;
+        }
+
+        /* Estilo para mensajes */
+        .message {
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        /* Navegación */
+        nav {
+            background-color: #0078d4;
+            padding: 20px 15px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            visibility: hidden;
+        }
+
+        nav a {
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            margin: 0 25px;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #005fa3;
+            transform: scale(1.05);
+        }
+
+        /* Secciones */
+        .section {
+            display: none;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            margin-top: 100px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .section.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+    </style>
+</head>
+<body>
+
+<!-- SECCIÓN: Formulario de Login -->
+<div id="loginForm">
+    <h2>Iniciar sesión</h2>
+    <input type="text" id="loginUsername" placeholder="Usuario" required>
+    <input type="password" id="loginPassword" placeholder="Contraseña" required>
+    <button onclick="login()">Iniciar sesión</button>
+    <p>No tienes cuenta? <a href="#" onclick="showRegisterForm()">Regístrate</a></p>
+    <div class="message" id="loginMessage"></div>
+</div>
+
+<!-- SECCIÓN: Formulario de Registro -->
+<div id="registerForm" style="display: none;">
+    <h2>Registrarse</h2>
+    <input type="text" id="registerUsername" placeholder="Usuario" required>
+    <input type="password" id="registerPassword" placeholder="Contraseña" required>
+    <button onclick="register()">Registrarse</button>
+    <p>¿Ya tienes cuenta? <a href="#" onclick="showLoginForm()">Inicia sesión</a></p>
+    <div class="message" id="registerMessage"></div>
+</div>
+
+<!-- SECCIÓN: Menú de Navegación -->
+<nav>
+    <a href="#" onclick="showSection('novedades')">Carga de Novedades</a>
+    <a href="#" onclick="showSection('database')">Base de Datos</a>
+    <a href="#" onclick="showSection('activos')">Móviles Activos</a>
+    <a href="#" onclick="logout()">Cerrar sesión</a>
+</nav>
+
+<div id="content">
+    <div class="container">
+        <!-- SECCIÓN: Carga de Novedades -->
+        <div id="novedades" class="section">
+            <h2>Carga de Novedades</h2>
+            <button onclick="abrirDialogo()">Cargar Móviles</button>
+        </div>
+
+        <!-- SECCIÓN: Base de Datos -->
+        <div id="database" class="section">
+            <h2>Base de Datos</h2>
+            <table id="databaseTable">
+                <thead>
+                    <tr>
+                        <th>Movil</th>
+                        <th>Patente</th>
+                        <th>Tetra</th>
+                        <th>Personal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Aquí se agregan los datos de los móviles -->
+                </tbody>
+            </table>
+            <button onclick="downloadExcel()">Descargar Excel</button>
+        </div>
+
+        <!-- SECCIÓN: Móviles Activos -->
+        <div id="activos" class="section">
+            <h2>Móviles Activos</h2>
+            <select id="movilSeleccionado" onchange="cargarDetallesMovil()">
+                <option value="">Selecciona un móvil</option>
+                <!-- Opciones de móviles cargados -->
+            </select>
+
+            <div id="movilDetalles" style="display:none;">
+                <h3>Detalles del Móvil</h3>
+                <label for="movilPatente">Patente:</label>
+                <input type="text" id="movilPatente" readonly>
+
+                <label for="movilTetra">Tetra:</label>
+                <input type="text" id="movilTetra" readonly>
+
+                <label for="movilPersonal">Personal:</label>
+                <input type="text" id="movilPersonal" readonly>
+
+                <div>
+                    <span class="estadoBoton" onclick="cambiarEstado('activo')">Activo</span>
+                    <span class="estadoBoton inactivo" onclick="cambiarEstado('inactivo')">Inactivo</span>
+                </div>
+
+                <label for="observaciones">Observaciones:</label>
+                <textarea id="observaciones" rows="4"></textarea>
+
+                <button onclick="guardarMovilActivo()">Guardar</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let moviles = []; // Array para almacenar los móviles cargados
+    let usuarios = JSON.parse(localStorage.getItem("usuarios")) || [
+        { username: "Alan", password: "1234", role: "gerente" },
+        { username: "GUADA", password: "1234", role: "supervisor" }
+    ];
+    let usuarioActivo = localStorage.getItem("usuarioActivo");
+
+    function showSection(sectionId) {
+        if (!usuarioActivo) {
+            alert("Debes iniciar sesión primero.");
+            showLoginForm();
+            return;
+        }
+
+        const usuario = usuarios.find(u => u.username === usuarioActivo);
+        
+        // Control de acceso basado en el rol
+        if (usuario.role === "supervisor" && sectionId !== "novedades") {
+            alert("No tienes permisos para acceder a esta sección.");
+            return;
+        }
+
+        const sections = document.querySelectorAll('.section');
+        sections.forEach(section => section.classList.remove('active'));
+        document.getElementById(sectionId).classList.add('active');
+    }
+
+    function showLoginForm() {
+        document.getElementById("loginForm").style.display = "block";
+        document.getElementById("registerForm").style.display = "none";
+        document.querySelector("nav").style.display = "none";
+    }
+
+    function showRegisterForm() {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+    }
+
+    function login() {
+        const username = document.getElementById("loginUsername").value;
+        const password = document.getElementById("loginPassword").value;
+        const usuario = usuarios.find(u => u.username === username && u.password === password);
+
+        if (usuario) {
+            localStorage.setItem("usuarioActivo", username);
+            usuarioActivo = username;
+            document.querySelector("nav").style.display = "flex";
+            showSection('novedades');
+            document.getElementById("loginForm").style.display = "none";
+        } else {
+            document.getElementById("loginMessage").textContent = "Usuario o contraseña incorrectos.";
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem("usuarioActivo");
+        usuarioActivo = null;
+        document.querySelector("nav").style.display = "none";
+        showLoginForm();
+    }
+
+    // Función de registro
+    function register() {
+        const username = document.getElementById("registerUsername").value;
+        const password = document.getElementById("registerPassword").value;
+        
+        if (usuarios.some(u => u.username === username)) {
+            document.getElementById("registerMessage").textContent = "El usuario ya existe.";
+        } else {
+            usuarios.push({ username, password, role: "supervisor" }); // Asignar rol por defecto
+            localStorage.setItem("usuarios", JSON.stringify(usuarios));
+            showLoginForm();
+            alert("Usuario registrado exitosamente.");
+        }
+    }
+
+    function abrirDialogo() {
+        document.getElementById('dialogoCarga').style.display = 'block';
+    }
+
+    function cerrarDialogo() {
+        document.getElementById('dialogoCarga').style.display = 'none';
+    }
+
+    function guardarMovil() {
+        const nombre = document.getElementById('movilNombre').value;
+        const patente = document.getElementById('movilPatenteInput').value;
+        const tetra = document.getElementById('movilTetraInput').value;
+        const personal = document.getElementById('movilPersonalInput').value;
+
+        moviles.push({ nombre, patente, tetra, personal, estado: "Inactivo", observaciones: "", fecha: new Date() });
+
+        // Agregarlo a la tabla
+        const table = document.getElementById('databaseTable').getElementsByTagName('tbody')[0];
+        const newRow = table.insertRow();
+        newRow.innerHTML = `  
+            <td>${nombre}</td>
+            <td>${patente}</td>
+            <td>${tetra}</td>
+            <td>${personal}</td>
+        `;
+
+        // Agregar opción en la lista de móviles activos
+        const movilSelect = document.getElementById('movilSeleccionado');
+        const option = document.createElement("option");
+        option.value = nombre;
+        option.textContent = nombre;
+        movilSelect.appendChild(option);
+        
+        alert('Móvil guardado exitosamente!');
+        cerrarDialogo();
+    }
+
+    function downloadExcel() {
+        const ws = XLSX.utils.json_to_sheet(moviles);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Moviles');
+        XLSX.writeFile(wb, `Moviles_${new Date().toLocaleDateString()}.xlsx`);
+    }
+</script>
+
+</body>
+</html>
